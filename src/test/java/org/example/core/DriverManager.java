@@ -15,6 +15,7 @@ public class DriverManager {
         WebDriverManager.chromedriver().setup();
         driver = new ChromeDriver();
         driver.manage().window().maximize();
+        driver.get("https://qalab.bensg.com/store/pe/");
     }
 
     @After
@@ -24,4 +25,3 @@ public class DriverManager {
         }
     }
 }
-

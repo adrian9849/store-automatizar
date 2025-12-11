@@ -1,123 +1,80 @@
 package org.example.steps;
 
-
-import io.cucumber.java.es.*;
 import org.example.core.DriverManager;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
-import org.testng.Assert;
-
-import java.util.List;
+import org.example.pages.*;
+import org.junit.Assert;
 
 public class StoreSteps {
 
-    WebDriver driver = DriverManager.driver;
+    private LoginPage loginPage;
+    private HomePage homePage;
+    private CategoriaPage categoriaPage;
+    private CarritoPage carritoPage;
 
-    @Dado("estoy en la página de la tienda")
-    public void estoyEnLaPaginaDeLaTienda() {
-        driver.get("https://qalab.bensg.com/store");
+    public StoreSteps() {
+        loginPage = new LoginPage(DriverManager.driver);
+        homePage = new HomePage(DriverManager.driver);
+        categoriaPage = new CategoriaPage(DriverManager.driver);
+        carritoPage = new CarritoPage(DriverManager.driver);
     }
 
-    @Y("me logueo con mi usuario {string} y clave {string}")
-    public void meLogueo(String user, String pass) {
-        // Click en Sign In
-        driver.findElement(By.xpath("//a[text()='Sign In']")).click();
-
-        // Completar credenciales
-        driver.findElement(By.id("email")).sendKeys(user);
-        driver.findElement(By.id("password")).sendKeys(pass);
-
-        // Login
-        driver.findElement(By.xpath("//button[text()='Login']")).click();
-
-        // Espera de carga usando un elemento visible
-        try { Thread.sleep(1500); } catch (Exception e) {}
+    // Abrir tienda automáticamente via DriverManager (@Before)
+    public void abrirTienda() {
+        homePage = new HomePage(DriverManager.driver);
     }
 
-    @Cuando("navego a la categoria {string} y subcategoria {string}")
-    public void navegoCategoria(String categoria, String subcategoria) {
-
-        // Seleccionar categoría
-        driver.findElement(By.xpath("//a[contains(text(),'" + categoria + "')]")).click();
-
-        // Seleccionar subcategoría
-        driver.findElement(By.xpath("//a[contains(text(),'" + subcategoria + "')]")).click();
-
-        try { Thread.sleep(1500); } catch (Exception e) {}
+    // LOGIN AUTOMÁTICO
+    public void login(String usuario, String clave) {
+        homePage.clickIniciarSesion();
+        loginPage.ingresarEmail(usuario);
+        loginPage.ingresarPassword(clave);
+        loginPage.clickLogin();
     }
 
-    @Y("agrego 2 unidades del primer producto al carrito")
-    public void agregoProducto() {
-
-        // Tomar el primer producto
-        List<WebElement> productos = driver.findElements(By.cssSelector(".product-item"));
-        WebElement primerProducto = productos.get(0);
-
-        // Extraer precio
-        String precioText = primerProducto.findElement(By.cssSelector(".price")).getText();
-        double precioUnitario = Double.parseDouble(precioText.replace("$", ""));
-
-        // Abrir detalle del producto
-        primerProducto.click();
-
-        // Aumentar cantidad
-        WebElement qtyInput = driver.findElement(By.id("quantity"));
-        qtyInput.clear();
-        qtyInput.sendKeys("2");
-
-        // Click en agregar
-        driver.findElement(By.xpath("//button[contains(text(),'Add to Cart')]")).click();
-
-        try { Thread.sleep(1500); } catch (Exception e) {}
-
-        // Guardar el valor en atributo del driver
-        driver.manage().window().setSize(driver.manage().window().getSize()); // Trigger para mantener sincronía
+    public void validarLoginFallido() {
+        Assert.assertTrue("El login debió fallar", loginPage.esLoginIncorrecto());
     }
 
-    @Entonces("valido en el popup la confirmación del producto agregado")
-    public void validoPopupConfirm() {
-        WebElement popup = driver.findElement(By.cssSelector(".toast-message"));
-        Assert.assertTrue(
-                popup.getText().contains("added to your cart"),
-                "El popup no confirma producto agregado."
-        );
+    public void validarLoginExitoso() {
+        Assert.assertTrue("El login debió ser correcto", homePage.estaEnHome());
     }
 
-    @Y("valido en el popup que el monto total sea calculado correctamente")
-    public void validoMontoPopup() {
 
-        // Obtener precio del popup
-        WebElement popupPrice = driver.findElement(By.cssSelector(".toast-message"));
-        String msg = popupPrice.getText();
-
-        // Buscar “Total: $XX”
-        String totalStr = msg.substring(msg.indexOf("Total: $") + 8).trim();
-        double total = Double.parseDouble(totalStr);
-
-        // Validar que sea 2 * precio
-        // (para esto deberíamos haber guardado el precio antes)
-        Assert.assertTrue(total > 0, "El monto del popup es inválido.");
-
+    // CATEGORÍAS
+    public void irCategoria(String categoria, String subcategoria) {
+        homePage.navegarCategoria(categoria, subcategoria);
     }
 
-    @Cuando("finalizo la compra")
-    public void finalizoCompra() {
-        driver.findElement(By.xpath("//a[contains(text(),'Cart')]")).click();
+    public void validarCategoriaCorrecta() {
+        Assert.assertTrue("La categoría debió existir", categoriaPage.estaEnCategoria());
     }
 
-    @Entonces("valido el titulo de la pagina del carrito")
-    public void validoTituloCarrito() {
-        WebElement titulo = driver.findElement(By.xpath("//h1[contains(text(),'Your Cart')]"));
-        Assert.assertTrue(titulo.isDisplayed(), "No estás en la página del carrito.");
+    public void validarCategoriaInexistente() {
+        Assert.assertTrue("La categoría NO debió existir", homePage.esCategoriaInexistente());
     }
 
-    @Y("vuelvo a validar el calculo de precios en el carrito")
-    public void validoCalculoCarrito() {
-        WebElement totalElement = driver.findElement(By.cssSelector(".cart-total .amount"));
-        String totalText = totalElement.getText().replace("$", "");
-        double total = Double.parseDouble(totalText);
+    // PRODUCTO
+    public void agregarPrimerProducto(int cantidad) {
+        categoriaPage.agregarProducto(cantidad);
+    }
 
-        Assert.assertTrue(total > 0, "El total del carrito no es válido.");
+    public void validarPopupCorrecto() {
+        Assert.assertTrue("No se mostró el popup correcto", categoriaPage.popupConfirmado());
+    }
+
+    public void validarMontoPopup() {
+        Assert.assertTrue("Monto incorrecto", categoriaPage.montoCalculadoCorrecto());
+    }
+
+    public void finalizarCompra() {
+        categoriaPage.irCarrito();
+    }
+
+    public void validarTituloCarrito() {
+        Assert.assertTrue("Título incorrecto", carritoPage.tituloCorrecto());
+    }
+
+    public void validarCalculoCarrito() {
+        Assert.assertTrue("Cálculo incorrecto", carritoPage.calculoCorrecto());
     }
 }
