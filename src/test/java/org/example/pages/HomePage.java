@@ -9,6 +9,8 @@ public class HomePage {
 
     private By btnIniciarSesion = By.xpath("//a[contains(@href,'iniciar-sesion')]");
 
+    private By tituloHome = By.xpath("//h1 | //h2");
+
     public HomePage(WebDriver driver) {
         this.driver = driver;
     }
@@ -19,7 +21,7 @@ public class HomePage {
 
     public boolean estaEnHome() {
         try {
-            return driver.findElement(By.xpath("//h2[contains(text(),'Categorías')]")).isDisplayed();
+            return driver.findElement(tituloHome).isDisplayed();
         } catch (Exception e) {
             return false;
         }
@@ -27,10 +29,20 @@ public class HomePage {
 
     public void navegarCategoria(String categoria, String subcategoria) {
         try {
-            driver.findElement(By.linkText(categoria)).click();
-            driver.findElement(By.linkText(subcategoria)).click();
+            // Clic en la categoría principal usando href parcial
+            By categoriaXPath = By.xpath("//a[contains(@href,'/" + categoria.toLowerCase() + "')]");
+            driver.findElement(categoriaXPath).click();
+
+            // Pequeña espera para que se despliegue el menú
+            Thread.sleep(500);
+
+            // Clic en la subcategoría
+            By subcategoriaXPath = By.xpath("//a[contains(@href,'/" + subcategoria.toLowerCase() + "')]");
+            driver.findElement(subcategoriaXPath).click();
+
         } catch (Exception e) {
-            throw new AssertionError("Categoría o subcategoría inexistente");
+            throw new AssertionError("No se pudo navegar a la categoría: "
+                    + categoria + " → " + subcategoria);
         }
     }
 

@@ -12,18 +12,21 @@ public class StoreSteps {
     private CarritoPage carritoPage;
 
     public StoreSteps() {
-        loginPage = new LoginPage(DriverManager.driver);
+        // vacío
+    }
+
+    // Abrir tienda
+    public void abrirTienda() {
+        DriverManager.driver.get("https://qalab.bensg.com/store/pe/");
+
+        // Inicializamos las Pages aquí
         homePage = new HomePage(DriverManager.driver);
+        loginPage = new LoginPage(DriverManager.driver);
         categoriaPage = new CategoriaPage(DriverManager.driver);
         carritoPage = new CarritoPage(DriverManager.driver);
     }
 
-    // Abrir tienda automáticamente via DriverManager (@Before)
-    public void abrirTienda() {
-        homePage = new HomePage(DriverManager.driver);
-    }
-
-    // LOGIN AUTOMÁTICO
+    // LOGIN
     public void login(String usuario, String clave) {
         homePage.clickIniciarSesion();
         loginPage.ingresarEmail(usuario);
@@ -38,7 +41,6 @@ public class StoreSteps {
     public void validarLoginExitoso() {
         Assert.assertTrue("El login debió ser correcto", homePage.estaEnHome());
     }
-
 
     // CATEGORÍAS
     public void irCategoria(String categoria, String subcategoria) {

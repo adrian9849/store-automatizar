@@ -18,5 +18,5 @@
   Escenario: Validación de navegación por categorías
     Dado estoy en la página de la tienda
     Y me logueo con mi usuario "adrian9849@hotmail.com" y clave "adrian9849**"
-    Cuando navego a la categoria "Electronics" y subcategoria "Phones"
+    Cuando navego a la categoria "Accesorios" y subcategoria "Autos"
     Entonces valio resultado categoria "valida"
